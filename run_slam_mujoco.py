@@ -2,17 +2,52 @@ import mujoco
 import mujoco.viewer
 import numpy as np
 import time
-import matplotlib
-matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
-from ekf_slam import EKFSLAM
+import os
+from ekf_slam import EKFSLAM, wrap_angle, spiral_schedule
 
-model = mujoco.MjModel.from_xml_path(
-    "C:\\Users\\myrsi\\slam\\robotis_mujoco_menagerie\\robotis_tb3\\scene_turtlebot3_waffle_pi.xml"
+MODEL_PATH = "C:\\Users\\myrsi\\slam\\robotis_mujoco_menagerie\\robotis_tb3\\scene_turtlebot3_waffle_pi.xml"
+def random_landmarks(n=8, x_range=(-5, 5), y_range=(0, 10), seed=None):
+    rng = np.random.default_rng(seed)
+    xs  = rng.uniform(x_range[0], x_range[1], n)
+    ys  = rng.uniform(y_range[0], y_range[1], n)
+    return [(float(xs[i]), float(ys[i])) for i in range(n)]
+def generate_landmark_xml(landmarks):
+    xml = ""
+    for i, (x, y) in enumerate(landmarks):
+        xml += f"""
+        <body name="landmark_{i}" pos="{x} {y} 0.3">
+            <geom type="cylinder" size="0.15 0.3" rgba="1 0 0 1"/>
+        </body>
+        """
+    return xml
+with open(MODEL_PATH, "r") as f:
+    xml_string = f.read()
+
+landmarks = random_landmarks(n=15, x_range=(-4, 4), y_range=(0, 5), seed=42)
+
+landmark_xml = generate_landmark_xml(landmarks)
+
+xml_string = xml_string.replace(
+    "</worldbody>",
+    landmark_xml + "\n</worldbody>"
 )
-data = mujoco.MjData(model)
+base_dir = "C:\\Users\\myrsi\\slam\\robotis_mujoco_menagerie\\robotis_tb3"
 
-robot_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "base_footprint")
+assets = {}
+
+for root, _, files in os.walk(base_dir):
+    for file in files:
+        full_path = os.path.join(root, file)
+
+        rel_path = os.path.relpath(full_path, base_dir)
+        rel_path = rel_path.replace("\\", "/")
+
+        with open(full_path, "rb") as f:
+            assets[rel_path] = f.read()
+model = mujoco.MjModel.from_xml_string(xml_string, assets=assets)
+data  = mujoco.MjData(model)
+
 
 landmark_ids = []
 for i in range(model.nbody):
@@ -20,199 +55,212 @@ for i in range(model.nbody):
     if name and "landmark" in name:
         landmark_ids.append(i)
 
-slam = EKFSLAM(len(landmark_ids))
+N_LANDMARKS = len(landmark_ids)
+print(f"Found {N_LANDMARKS} landmarks")
+
+
+R_motion = np.diag([0.003**2, 0.003**2, np.deg2rad(0.1)**2])
+Q_meas   = np.diag([0.01**2,  np.deg2rad(0.25)**2])
+
+
+slam = EKFSLAM(N_LANDMARKS)
+
+
+LIDAR_RANGE = 3.0
+LIDAR_FOV   = 2*np.pi
 
 def get_robot_pose():
     x = data.qpos[0]
     y = data.qpos[1]
+
     qw, qx, qy, qz = data.qpos[3:7]
+
     theta = np.arctan2(
-        2 * (qw * qz + qx * qy),
-        1 - 2 * (qy**2 + qz**2)
+        2 * (qw*qz + qx*qy),
+        1 - 2 * (qy*qy + qz*qz)
     )
+
     return x, y, theta
 
 
-gt_pose = [0.0, 0.0, 0.0]
-
-def move_robot(v, omega, dt, sigma_v=0.0, sigma_omega=0.0):
-    """
-    Integrate unicycle motion and write result to data.qpos.
-    sigma_v / sigma_omega = 0  -> noiseless (use for ground truth)
-    sigma_v / sigma_omega > 0  -> noisy     (use for the actual robot)
-    """
-    v_cmd     = v     + np.random.normal(0, sigma_v)     if sigma_v     > 0 else v
-    omega_cmd = omega + np.random.normal(0, sigma_omega) if sigma_omega > 0 else omega
-    if abs(omega_cmd) < 1e-5:
-        omega_cmd = 1e-5
-
-    x, y, theta = get_robot_pose()
-    dx     = -v_cmd/omega_cmd * np.sin(theta) + v_cmd/omega_cmd * np.sin(theta + omega_cmd*dt)
-    dy     =  v_cmd/omega_cmd * np.cos(theta) - v_cmd/omega_cmd * np.cos(theta + omega_cmd*dt)
-    dtheta =  omega_cmd * dt
-    x     += dx
-    y     += dy
-    theta += dtheta
-    theta  = np.arctan2(np.sin(theta), np.cos(theta))
-
+def set_robot_pose(x, y, theta):
     data.qpos[0] = x
     data.qpos[1] = y
+
     qw = np.cos(theta / 2)
     qz = np.sin(theta / 2)
+
     data.qpos[3] = qw
     data.qpos[4] = 0
     data.qpos[5] = 0
     data.qpos[6] = qz
+
+def move_robot(v, omega, dt):
+
+    x, y, theta = get_robot_pose()
+
+    if abs(omega) < 1e-5:
+        omega = 1e-5
+
+    # clean motion
+    x += -v/omega*np.sin(theta) + v/omega*np.sin(theta + omega*dt)
+    y +=  v/omega*np.cos(theta) - v/omega*np.cos(theta + omega*dt)
+    theta = wrap_angle(theta + omega*dt)
+
+    # add noise
+    noise = np.random.multivariate_normal(np.zeros(3), R_motion)
+    x += noise[0]
+    y += noise[1]
+    theta = wrap_angle(theta + noise[2])
+
+    set_robot_pose(x, y, theta)
+
     return x, y, theta
 
 
-LIDAR_RANGE = 1
-LIDAR_FOV   = np.pi/2
+def move_ground_truth(gt, v, omega, dt):
+
+    x, y, theta = gt
+
+    if abs(omega) < 1e-5:
+        omega = 1e-5
+
+    x += -v/omega*np.sin(theta) + v/omega*np.sin(theta + omega*dt)
+    y +=  v/omega*np.cos(theta) - v/omega*np.cos(theta + omega*dt)
+    theta = wrap_angle(theta + omega*dt)
+
+    return np.array([x, y, theta])
+
 
 def observe_landmarks():
-    """
-    Only return a measurement when a landmark is within LiDAR range AND FOV.
-    The EKF update is only triggered on actual detections, not every landmark
-    every step -- matching how a real LiDAR works.
-    """
+
     x, y, theta = get_robot_pose()
     measurements = []
-    for i, lm_id in enumerate(landmark_ids):
-        pos = data.xpos[lm_id]
-        lx  = pos[0]
-        ly  = pos[1]
-        dx  = lx - x
-        dy  = ly - y
-        r   = np.sqrt(dx**2 + dy**2)
 
+    for i, lm_id in enumerate(landmark_ids):
+
+        pos = data.xpos[lm_id]
+        lx, ly = pos[0], pos[1]
+
+        dx = lx - x
+        dy = ly - y
+
+        r = np.hypot(dx, dy)
         if r > LIDAR_RANGE:
             continue
 
-        phi = np.arctan2(dy, dx) - theta
-        phi = np.arctan2(np.sin(phi), np.cos(phi))
-
+        phi = wrap_angle(np.arctan2(dy, dx) - theta)
         if abs(phi) > LIDAR_FOV / 2:
             continue
 
-        r   += np.random.normal(0, 0.05)
-        phi += np.random.normal(0, 0.02)
-        phi  = np.arctan2(np.sin(phi), np.cos(phi))
+        # add measurement noise
+        noise = np.random.multivariate_normal(np.zeros(2), Q_meas)
+        r += noise[0]
+        phi = wrap_angle(phi + noise[1])
+
         measurements.append((i, r, phi))
 
     return measurements
 
+dt    = model.opt.timestep
+omega = 0.2
 
-mu_history    = []
-sigma_history = []
-gt_history    = []
-z_history     = []
+v_schedule, total_frames = spiral_schedule(
+    v_start=0.5,
+    omega=omega,
+    dt=dt,
+    n_laps=6,
+    v_decay=0.8,
+    v_min=0.2
+)
 
-dt = model.opt.timestep
+
+mu_hist    = []
+sigma_hist = []
+gt_hist    = []
+noisy_hist = []
+gt_pose = np.array([0.0, 0.0, 0.0])
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
-    step_counter = 0
-    while viewer.is_running():
-        v     = 0.5
-        omega = 0.5
 
-        move_robot(v, omega, dt, sigma_v=0.05, sigma_omega=0.02)
+    for t in range(total_frames):
+
+        if not viewer.is_running():
+            break
+
+        v = v_schedule[t]
+
+        # 1. noisy robot
+        x, y, theta = move_robot(v, omega, dt)
+
         mujoco.mj_forward(model, data)
+        noisy_hist.append([x, y, theta])
+        # 2. ground truth
+        gt_pose = move_ground_truth(gt_pose, v, omega, dt)
 
-        if abs(omega) < 1e-5:
-            omega_gt = 1e-5
-        else:
-            omega_gt = omega
-        gx, gy, gtheta = gt_pose
-        gt_pose[0] += -v/omega_gt * np.sin(gtheta) + v/omega_gt * np.sin(gtheta + omega_gt*dt)
-        gt_pose[1] +=  v/omega_gt * np.cos(gtheta) - v/omega_gt * np.cos(gtheta + omega_gt*dt)
-        gt_pose[2]  = np.arctan2(np.sin(gt_pose[2] + omega_gt*dt), np.cos(gt_pose[2] + omega_gt*dt))
-
+        # 3. EKF predict 
         slam.predict(v, omega, dt)
 
+        # 4. measurements
         measurements = observe_landmarks()
-        z_history.append(list(measurements))
+
+        # 5. EKF update
         for lm_id, r, b in measurements:
             slam.update(lm_id, (r, b))
 
-        est_x, est_y, est_theta = slam.mu[0:3]
-        gt_x, gt_y, gt_theta    = gt_pose
-        error = np.sqrt((gt_x - est_x)**2 + (gt_y - est_y)**2)
+        # 6. store
+        mu_hist.append(slam.mu.copy())
+        sigma_hist.append(np.diag(slam.Sigma))
+        gt_hist.append(gt_pose.copy())
 
-        mu_history.append(slam.mu.copy())
-        sigma_history.append(np.diag(slam.Sigma).copy())
-        gt_history.append(gt_pose.copy())
-
-        step_counter += 1
-        if step_counter % 20 == 0:
-            print(
-                "GT:", round(gt_x, 2), round(gt_y, 2),
-                "| EKF:", round(est_x, 2), round(est_y, 2),
-                "| error:", round(error, 3)
-            )
+        if t % 20 == 0:
+            est = slam.mu[:2]
+            err = np.linalg.norm(est - gt_pose[:2])
+            print(f"[{t}] error = {err:.3f}")
 
         viewer.sync()
         time.sleep(dt)
 
-
-mu     = np.array(mu_history)
-sigma  = np.array(sigma_history)
-gt     = np.array(gt_history)
+mu = np.array(mu_hist)
+gt = np.array(gt_hist)
+noisy = np.array(noisy_hist)
+sigma = np.array(sigma_hist)
 t_axis = np.arange(len(mu)) * dt
 
-N = len(landmark_ids)
 
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_aspect('equal')
-ax.set_title("EKF-SLAM | TurtleBot3 Waffle Pi")
-ax.plot(gt[:, 0], gt[:, 1], 'g-',  lw=1.5, label="Ground truth")
-ax.plot(mu[:, 0], mu[:, 1], 'r--', lw=1.5, label="EKF estimate")
+plt.figure(figsize=(8, 8))
+plt.plot(gt[:,0], gt[:,1], 'g', label="GT")
+plt.plot(mu[:,0], mu[:,1], 'r--', label="EKF")
+plt.plot(noisy[:,0], noisy[:,1], 'b', label="Noisy Robot")
 
+# landmarks
 for i, lm_id in enumerate(landmark_ids):
     pos = data.xpos[lm_id]
-    ax.scatter(pos[0], pos[1], marker='s', s=120, color='black', zorder=5,
-               label="True landmark" if i == 0 else "")
+    plt.scatter(pos[0], pos[1], c='black', marker='s')
 
-lm_ex = [slam.mu[3+2*i]   for i in range(N) if slam.initialized[i]]
-lm_ey = [slam.mu[3+2*i+1] for i in range(N) if slam.initialized[i]]
-if lm_ex:
-    ax.scatter(lm_ex, lm_ey, marker='x', s=100, color='red', zorder=5,
-               label="EKF landmarks")
+# estimated landmarks
+lx = [slam.mu[3+2*i] for i in range(N_LANDMARKS) if slam.initialized[i]]
+ly = [slam.mu[3+2*i+1] for i in range(N_LANDMARKS) if slam.initialized[i]]
+plt.scatter(lx, ly, c='red', marker='x')
 
-ax.legend()
-ax.grid(True, alpha=0.3)
+plt.legend()
+plt.title("SLAM Map")
+plt.axis('equal')
 
-meas_x, meas_y = [], []
-for step_idx, step_meas in enumerate(z_history):
-    if not step_meas:
-        continue
-    rx, ry, rtheta = gt_history[step_idx]
-    for (lm_id, r, phi) in step_meas:
-        abs_phi = phi + rtheta
-        meas_x.append(rx + r * np.cos(abs_phi))
-        meas_y.append(ry + r * np.sin(abs_phi))
 
-if meas_x:
-    ax.scatter(meas_x, meas_y, s=4, alpha=0.25, color='orange',
-               zorder=3, label="Noisy measurements")
-    ax.legend()
+# states
+plt.figure()
+plt.subplot(3,1,1)
+plt.plot(t_axis, mu[:,0], label="EKF")
+plt.plot(t_axis, gt[:,0], '--', label="GT")
+plt.legend()
 
-fig2, axes = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
-fig2.suptitle("EKF vs Ground Truth -- Pose States")
-for i, lbl in enumerate(['x (m)', 'y (m)', 'theta (rad)']):
-    axes[i].plot(t_axis, mu[:, i], label="EKF")
-    axes[i].plot(t_axis, gt[:, i], '--', label="Ground Truth")
-    axes[i].set_ylabel(lbl)
-    axes[i].legend(fontsize=8)
-    axes[i].grid(True, alpha=0.3)
-axes[-1].set_xlabel("time (s)")
+plt.subplot(3,1,2)
+plt.plot(t_axis, mu[:,1])
+plt.plot(t_axis, gt[:,1], '--')
 
-fig3, axes3 = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
-fig3.suptitle("EKF Pose Covariance Diagonal")
-for i, lbl in enumerate(['sigma2_x', 'sigma2_y', 'sigma2_theta']):
-    axes3[i].plot(t_axis, sigma[:, i])
-    axes3[i].set_ylabel(lbl)
-    axes3[i].grid(True, alpha=0.3)
-axes3[-1].set_xlabel("time (s)")
+plt.subplot(3,1,3)
+plt.plot(t_axis, mu[:,2])
+plt.plot(t_axis, gt[:,2], '--')
 
-plt.tight_layout()
 plt.show()

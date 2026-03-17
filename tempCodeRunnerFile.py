@@ -6,10 +6,12 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
+# ─────────────────────────────────────────────────────────────────────────────
 def wrap_angle(a):
     return (a + np.pi) % (2 * np.pi) - np.pi
 
 
+# ─────────────────────────────────────────────────────────────────────────────
 class EKFSLAM:
 
     def __init__(self, num_landmarks):
@@ -100,22 +102,27 @@ class EKFSLAM:
         self.Sigma = (np.eye(self.state_size) - K @ H) @ self.Sigma
 
 
+# ─────────────────────────────────────────────────────────────────────────────
 class Robot:
-
+    """
+    Moves with CLEAN controls.
+    Noise enters only in two places (matching the reference):
+      - R_motion : added to the state after integration  (like simulate_slam_step)
+      - Q_meas   : added to range/bearing measurements   (like simulate_slam_step)
+    """
 
     def __init__(self, x=0.0, y=0.0, theta=0.0,
                  R_motion=None, Q_meas=None,
-                 lidar_range=2.0, lidar_fov=np.pi, lidar_beams=60):
+                 lidar_range=5.0, lidar_fov=np.pi, lidar_beams=60):
 
         self.x     = x
         self.y     = y
         self.theta = theta
 
-        # R : 3x3 motion noise covariance  
-        self.R_motion = R_motion 
+        # R : 3x3 motion noise covariance  (added to state, NOT to controls)
+        self.R_motion = R_motion
         # Q : 2x2 measurement noise covariance
-        self.Q_meas = Q_meas
-
+        self.Q_meas = Q_meas 
         self.lidar_range = lidar_range
         self.lidar_fov   = lidar_fov
         self.lidar_beams = lidar_beams
@@ -124,14 +131,21 @@ class Robot:
         self.history_y = [y]
 
     def move(self, v, omega, dt):
-        
+        """
+        Integrate clean controls, then add R_motion noise to the state.
+        This is exactly what simulate_slam_step does:
+            q_mean = step_unicycle(q, v_cmd, w_cmd, dt)
+            q_new  = q_mean + rng.multivariate_normal(zeros, R_motion)
+        """
         if abs(omega) < 1e-5:
             omega = 1e-5
 
+        # clean integration
         self.x     += -v/omega * np.sin(self.theta) + v/omega * np.sin(self.theta + omega*dt)
         self.y     +=  v/omega * np.cos(self.theta) - v/omega * np.cos(self.theta + omega*dt)
         self.theta += omega * dt
 
+        # add R_motion noise to the state  ← only noise source on motion
         noise = np.random.multivariate_normal(np.zeros(3), self.R_motion)
         self.x     += noise[0]
         self.y     += noise[1]
@@ -145,7 +159,11 @@ class Robot:
         return self.x, self.y, self.theta
 
     def lidar_scan(self, landmark_map):
-       
+        """
+        Scan landmarks within FOV and range.
+        Add Q_meas noise to measurements  ← only noise source on sensing.
+        Controls are never touched.
+        """
         scan_lines   = []
         measurements = []
 
@@ -178,6 +196,7 @@ class Robot:
             scan_lines.append((end_x, end_y))
 
             if detected_id is not None:
+                # Q_meas noise on measurements only — controls untouched
                 meas_noise = np.random.multivariate_normal(np.zeros(2), self.Q_meas)
                 r_noisy = min_dist         + meas_noise[0]
                 b_noisy = detected_bearing + meas_noise[1]
@@ -185,7 +204,11 @@ class Robot:
                 measurements.append((detected_id, r_noisy, b_noisy))
 
         return scan_lines, measurements
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 class GroundTruthRobot:
+    """Perfect integration of clean controls — no noise ever."""
 
     def __init__(self, x=0.0, y=0.0, theta=0.0):
         self.x     = x
@@ -209,6 +232,8 @@ class GroundTruthRobot:
     def get_pose(self):
         return self.x, self.y, self.theta
 
+
+# ─────────────────────────────────────────────────────────────────────────────
 class LandmarkMap:
 
     def __init__(self, landmarks):
@@ -218,29 +243,7 @@ class LandmarkMap:
         return self.landmarks
 
 
-def spiral_schedule(v_start, omega, dt, n_laps, v_decay=0.85, v_min=0.2):
-   
-    
-    lap_period     = 2 * np.pi / omega          # seconds per lap
-    frames_per_lap = int(round(lap_period / dt))
-
-    v_schedule = []
-    v = v_start
-    for _ in range(n_laps):
-        v_schedule.extend([v] * frames_per_lap)
-        v = max(v * v_decay, v_min)
-
-    return np.array(v_schedule), len(v_schedule)
-
-
-def random_landmarks(n=8, x_range=(-5, 5), y_range=(0, 10), seed=None):
-    
-    rng = np.random.default_rng(seed)
-    xs  = rng.uniform(x_range[0], x_range[1], n)
-    ys  = rng.uniform(y_range[0], y_range[1], n)
-    return [(float(xs[i]), float(ys[i]), 0.0) for i in range(n)]
-
-
+# ─────────────────────────────────────────────────────────────────────────────
 class Simulator:
 
     def __init__(self, robot, landmark_map, v, omega, dt=0.05, sim_time=20):
@@ -252,16 +255,11 @@ class Simulator:
         self.landmark_map = landmark_map
         self.slam         = EKFSLAM(len(self.landmark_map.get_landmarks()))
 
+        self.v        = v
         self.omega    = omega
         self.dt       = dt
-
-        if hasattr(v, '__len__'):
-            self.v_schedule = np.asarray(v)
-        else:
-            self.v_schedule = np.full(int(sim_time / dt), float(v))
-
-        self.frames   = len(self.v_schedule)
-        self.sim_time = self.frames * dt
+        self.sim_time = sim_time
+        self.frames   = int(sim_time / dt)
 
         self.est_traj_x    = []
         self.est_traj_y    = []
@@ -269,10 +267,11 @@ class Simulator:
         self.sigma_history = []
         self.gt_history    = []
 
+        # ── figure ────────────────────────────────────────────────────────────
         self.fig, self.ax = plt.subplots()
         self.ax.set_aspect('equal')
-        self.ax.set_xlim(-5, 5)
-        self.ax.set_ylim(0, 10)
+        self.ax.set_xlim(-10, 10)
+        self.ax.set_ylim(-10, 10)
         self.ax.set_title("2D EKF SLAM Simulation")
 
         lm = np.array(self.landmark_map.get_landmarks())
@@ -295,19 +294,17 @@ class Simulator:
 
         self.ax.legend()
 
+    # ─────────────────────────────────────────────────────────────────────────
     def update(self, frame):
 
-        # current v from spiral schedule
-        v = self.v_schedule[frame]
-
         # noisy robot moves (clean controls + R_motion on state)
-        self.robot.move(v, self.omega, self.dt)
+        self.robot.move(self.v, self.omega, self.dt)
 
         # ground truth moves with clean controls, no noise
-        self.gt_robot.move(v, self.omega, self.dt)
+        self.gt_robot.move(self.v, self.omega, self.dt)
 
         # EKF predict with clean controls
-        self.slam.predict(v, self.omega, self.dt)
+        self.slam.predict(self.v, self.omega, self.dt)
 
         gt_x, gt_y, gt_theta = self.gt_robot.get_pose()
         self.gt_history.append([gt_x, gt_y, gt_theta])
@@ -363,6 +360,7 @@ class Simulator:
             *self.lidar_lines
         )
 
+    # ─────────────────────────────────────────────────────────────────────────
     def plot_state_history(self):
 
         mu    = np.array(self.mu_history)
@@ -408,6 +406,7 @@ class Simulator:
 
         plt.show()
 
+    # ─────────────────────────────────────────────────────────────────────────
     def run(self):
         self.ani = FuncAnimation(
             self.fig,
@@ -422,36 +421,33 @@ class Simulator:
 
 if __name__ == "__main__":
 
-    R_motion = np.diag([0.003**2, 0.003**2, np.deg2rad(0.1)**2])
-    Q_meas   = np.diag([0.01**2,  np.deg2rad(0.25)**2])
+    R_motion = np.diag([0.05**2, 0.05**2, np.deg2rad(0.1)**2])
+    Q_meas   = np.diag([0.003**2,  np.deg2rad(0.25)**2])
 
     robot = Robot(
         x=0.0, y=0.0, theta=0.0,
         R_motion=R_motion,
         Q_meas=Q_meas,
-        lidar_range=2.0,
-        lidar_fov=2*np.pi,
+        lidar_range=3.0,
+        lidar_fov=2*np.pi,      
         lidar_beams=60
     )
 
-    landmarks = random_landmarks(n=19, x_range=(-5, 5), y_range=(0, 10), seed=42)
+    landmarks = [
+        (2,  1,  np.pi/2),
+        (-2, -1, 0),
+        (0,  7.5, np.pi/4),
+    ]
 
     landmark_map = LandmarkMap(landmarks)
-
-    dt    = 0.05
-    omega = 0.5
-
-    v_schedule, total_frames = spiral_schedule(
-        v_start=2.0, omega=omega, dt=dt, n_laps=6, v_decay=0.80, v_min=0.2
-    )
 
     simulator = Simulator(
         robot=robot,
         landmark_map=landmark_map,
-        v=v_schedule, 
-        omega=omega,
-        dt=dt,
-        sim_time=total_frames * dt
+        v=2.0,
+        omega=0.5,
+        dt=0.05,
+        sim_time=20
     )
 
     simulator.run()

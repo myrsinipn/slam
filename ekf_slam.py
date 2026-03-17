@@ -1,4 +1,8 @@
 import numpy as np
+
+def wrap_angle(a):
+    return (a + np.pi) % (2 * np.pi) - np.pi
+
 class EKFSLAM:
 
     def __init__(self, num_landmarks):
@@ -110,3 +114,17 @@ class EKFSLAM:
         # Covariance update
         I = np.eye(self.state_size)
         self.Sigma = (I - K @ H) @ self.Sigma
+
+def spiral_schedule(v_start, omega, dt, n_laps, v_decay=0.85, v_min=0.2):
+   
+    
+    lap_period     = 2 * np.pi / omega          # seconds per lap
+    frames_per_lap = int(round(lap_period / dt))
+
+    v_schedule = []
+    v = v_start
+    for _ in range(n_laps):
+        v_schedule.extend([v] * frames_per_lap)
+        v = max(v * v_decay, v_min)
+
+    return np.array(v_schedule), len(v_schedule)
