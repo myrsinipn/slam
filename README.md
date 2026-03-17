@@ -31,8 +31,6 @@ Linear velocity noise:
 )
 v+N(0,σ
 v
-	​
-
 )
 
 Angular velocity noise: 
@@ -47,43 +45,39 @@ Angular velocity noise:
 )
 ω+N(0,σ
 ω
-	​
-
 )
 
 This forms the foundation for all later estimation algorithms.
-
-🔹 kalman.py — Kalman Filter (Double Integrator)
+---
+**kalman.py — Kalman Filter (Double Integrator)**
 
 Implements a linear Kalman Filter on a double integrator system:
+- **State:** position & velocity
+-**Demonstrates:**
+	-Prediction vs update
 
-State: position & velocity
+	-Effect of process & measurement noise
 
-Demonstrates:
+	-Convergence behavior
+  ---
 
-Prediction vs update
-
-Effect of process & measurement noise
-
-Convergence behavior
-
-🔹 ekf.py — Extended Kalman Filter
+**ekf.py — Extended Kalman Filter**
 
 Applies EKF to the nonlinear robot motion model:
 
-Uses Jacobian linearization
+- Uses Jacobian linearization
 
-Handles nonlinear state transitions
+- Handles nonlinear state transitions
 
-Estimates robot pose under noise
-
-🔹 slam.py — EKF-SLAM Core
+- Estimates robot pose under noise
+ ---  
+ **slam.py — EKF-SLAM Core**
 
 Core implementation of EKF-based SLAM:
 
-State vector includes:
+-**State vector includes:**
 
-Robot pose 
+-Robot pose 
 (
 𝑥
 ,
@@ -93,73 +87,73 @@ Robot pose
 )
 (x,y,θ)
 
-Landmark positions
+-Landmark positions
 
-Uses known landmark correspondences (no data association problem)
+-**Uses known landmark correspondences (no data association problem)**
 
-Sensor model: Simulated LiDAR (range & bearing)
-
-🔹 ekf_slam.py — Full SLAM Simulation
+-**Sensor model: Simulated LiDAR (range & bearing)**
+---
+**ekf_slam.py — Full SLAM Simulation**
 
 Runs the full SLAM pipeline:
 
-Real-time simulation of:
+-**Real-time simulation of:**
 
-Robot motion
+-Robot motion
 
-LiDAR observations
+-LiDAR observations
 
-EKF updates
+-EKF updates
 
-Tracks:
+-**Tracks:**
 
-Estimated trajectory
+-Estimated trajectory
 
-Ground truth
+-Ground truth
 
-Landmark map
-
-🔹 run_slam_mujoco.py — MuJoCo Visualization
+-Landmark map
+---
+**run_slam_mujoco.py — MuJoCo Visualization**
 
 Real-time visualization using MuJoCo:
 
-Displays robot motion and SLAM behavior
+-Displays robot motion and SLAM behavior
 
-Useful for debugging and demonstration
+-Useful for debugging and demonstration
 
-Integrates with simulation output
-
-📁 robotis_mujoco_menagerie/
+-Integrates with simulation output
+---
+**robotis_mujoco_menagerie/**
 
 Assets and models for MuJoCo simulation.
-
-📁 diagrams/
+---
+**diagrams/**
 
 Contains generated plots such as:
 
-State mean 
+-State mean 
 𝜇
 μ
 
-Covariance 
+-Covariance 
 Σ
 Σ
 
-Estimation error over time
+-Estimation error over time
+---
+**SLAM Setup**
 
-📡 SLAM Setup
+-Sensor: Simulated LiDAR
 
-Sensor: Simulated LiDAR
+-Measurements: Range & Bearing
 
-Measurements: Range & Bearing
+-Landmarks: Known correspondences
 
-Landmarks: Known correspondences
+-Estimation Method: Extended Kalman Filter (EKF)
 
-Estimation Method: Extended Kalman Filter (EKF)
-
-Execution: Real-time simulation
-
-📊 Example Output
+-Execution: Real-time simulation
+---
+**Example Output**
 
 Here’s a typical EKF-SLAM result:
 
@@ -172,62 +166,51 @@ Here’s a typical EKF-SLAM result:
 🟠 Robot position
 
 🟡 LiDAR rays
+<img width="916" height="877" alt="image" src="https://github.com/user-attachments/assets/8f25297d-1ab8-4b26-b52a-88debab9a6d4" />
+---
+**How to Run**
+1. **Basic Simulation**
+-python simulation.py
+2. **Kalman Filter Demo**
+-python kalman.py
+3. **EKF Localization**
+-python ekf.py
+4. **EKF-SLAM**
+-python ekf_slam.py
+5. **MuJoCo Visualization**
+-python run_slam_mujoco.py
+---
+ **Outputs**
 
-(You can place your image here in GitHub)
+**The system generates:**
 
-▶️ How to Run
-1. Basic Simulation
-python simulation.py
-2. Kalman Filter Demo
-python kalman.py
-3. EKF Localization
-python ekf.py
-4. EKF-SLAM
-python ekf_slam.py
-5. MuJoCo Visualization
-python run_slam_mujoco.py
-📈 Outputs
+- **Robot trajectory (ground truth vs estimated)**
 
-The system generates:
+- **Landmark map**
 
-📍 Robot trajectory (ground truth vs estimated)
+-**Evolution of:**
 
-🗺️ Landmark map
-
-📉 Evolution of:
-
-State mean 
+-State mean 
 𝜇
 μ
 
-Covariance 
+-Covariance 
 Σ
 Σ
+---
+ **Key Concepts Demonstrated**
 
-🎯 Key Concepts Demonstrated
+-Probabilistic robotics
 
-Probabilistic robotics
+-Gaussian noise modeling
 
-Gaussian noise modeling
+-Kalman Filter vs EKF
 
-Kalman Filter vs EKF
+-Nonlinear state estimation
 
-Nonlinear state estimation
+-EKF-SLAM formulation
 
-EKF-SLAM formulation
+-Sensor modeling (LiDAR)
 
-Sensor modeling (LiDAR)
-
-Real-time simulation
-
-🚀 Possible Improvements
-
-Add unknown data association
-
-Implement Particle Filter SLAM (FastSLAM)
-
-Use real datasets (e.g., KITTI)
-
-Improve visualization (interactive plots / UI)
-
-Optimize performance for large-scale maps
+-Real-time simulation
+---
