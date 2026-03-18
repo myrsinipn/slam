@@ -20,7 +20,8 @@ The goal is to provide both intuitive understanding and practical implementation
 
 Implements a unicycle (velocity) motion model with Gaussian noise:
 
-- Linear velocity noise: 
+- Linear velocity noise:
+  
 𝑣
 +
 𝑁
@@ -32,7 +33,8 @@ Implements a unicycle (velocity) motion model with Gaussian noise:
 )
 
 
-- Angular velocity noise: 
+- Angular velocity noise:
+  
 𝜔
 +
 𝑁
@@ -44,7 +46,7 @@ Implements a unicycle (velocity) motion model with Gaussian noise:
 )
 
 
-This forms the foundation for all later estimation algorithms.
+**This forms the foundation for all later estimation algorithms.**
 
 ---
 **kalman.py — Kalman Filter (Double Integrator)**
@@ -79,7 +81,7 @@ Applies EKF to the nonlinear robot motion model:
 
 - State vector includes:
 
- -Robot pose 
+ - Robot pose 
 (
 𝑥
 ,
@@ -88,11 +90,10 @@ Applies EKF to the nonlinear robot motion model:
 𝜃
 )
 
- -Landmark positions
+ - Landmark positions
+ - Uses known landmark correspondences
+ - Sensor model: Simulated LiDAR (range & bearing)
 
-- Uses known landmark correspondences
-
-- Sensor model: Simulated LiDAR (range & bearing)
 
 ---
 **slam.py — Full SLAM Simulation**
@@ -113,7 +114,7 @@ Runs the full SLAM pipeline:
 
   -Ground truth
 
- -Landmark map
+ - Landmark map
 
 ---
 **run_slam_mujoco.py — MuJoCo Visualization**
