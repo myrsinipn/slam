@@ -11,7 +11,7 @@ This repository implements a complete pipeline for Simultaneous Localization and
 - **Full EKF-SLAM with LiDAR simulation**
 - **Real-time visualization using MuJoCo**
 
-The goal is to provide both intuitive understanding and practical implementation of probabilistic robotics algorithms.
+**The goal is to provide both intuitive understanding and practical implementation of probabilistic robotics algorithms.**
 
 ---
 
@@ -46,7 +46,7 @@ Implements a unicycle (velocity) motion model with Gaussian noise:
 )
 
 
-**This forms the foundation for all later estimation algorithms.**
+This forms the foundation for all later estimation algorithms.
 
 ---
 **kalman.py — Kalman Filter (Double Integrator)**
