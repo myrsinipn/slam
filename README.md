@@ -169,18 +169,17 @@ Clone the repository and install dependencies:
 ---
 **How to Run**
 - **Basic Simulation**
-   
-	python simulation.py
+		python simulation.py
 - **Kalman Filter Demo**
 
 	python kalman.py
-  - **EKF Localization**
+- **EKF Localization**
   
 	python ekf.py
 - **EKF-SLAM**
   
 	python slam.py
-  - **MuJoCo Visualization**
+- **MuJoCo Visualization**
 
 	python run_slam_mujoco.py
 ---
