@@ -174,19 +174,15 @@ Clone the repository and install dependencies:
 	python simulation.py
 2. **Kalman Filter Demo**
 
-```bash
 	python kalman.py
 3. **EKF Localization**
   
-```bash
 	python ekf.py
 4. **EKF-SLAM**
   
-```bash
 	python slam.py
 5. **MuJoCo Visualization**
 
-```bash
 	python run_slam_mujoco.py
 ---
  **Outputs**
