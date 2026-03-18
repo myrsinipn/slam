@@ -30,9 +30,7 @@ Linear velocity noise:
 𝜎
 𝑣
 )
-v+N(0,σ
-v
-)
+
 
 Angular velocity noise: 
 𝜔
@@ -44,9 +42,7 @@ Angular velocity noise:
 𝜎
 𝜔
 )
-ω+N(0,σ
-ω
-)
+
 
 This forms the foundation for all later estimation algorithms.
 
@@ -55,8 +51,7 @@ This forms the foundation for all later estimation algorithms.
 
 Implements a linear Kalman Filter on a double integrator system:
 - **State:** position & velocity
-- **Demonstrates:**
-- 
+- **Demonstrates:** 
 	-Prediction vs update
 
 	-Effect of process & measurement noise
@@ -75,12 +70,11 @@ Applies EKF to the nonlinear robot motion model:
 
 - Estimates robot pose under noise
  ---  
- **slam.py — EKF-SLAM Core**
+ **ekf_slam.py — EKF-SLAM Core**
 
 **Core implementation of EKF-based SLAM:**
 
 -**State vector includes:**
-
 	-Robot pose 
 (
 𝑥
@@ -89,16 +83,15 @@ Applies EKF to the nonlinear robot motion model:
 ,
 𝜃
 )
-(x,y,θ)
 
 	-Landmark positions
 
--**Uses known landmark correspondences (no data association problem)**
+-**Uses known landmark correspondences**
 
 -**Sensor model: Simulated LiDAR (range & bearing)**
 
 ---
-**ekf_slam.py — Full SLAM Simulation**
+**slam.py — Full SLAM Simulation**
 
 Runs the full SLAM pipeline:
 
@@ -124,8 +117,6 @@ Runs the full SLAM pipeline:
 Real-time visualization using MuJoCo:
 
 -Displays robot motion and SLAM behavior
-
--Useful for debugging and demonstration
 
 -Integrates with simulation output
 
@@ -181,15 +172,15 @@ Here’s a typical EKF-SLAM result:
 ---
 **How to Run**
 1. **Basic Simulation**
--python simulation.py
+	-python simulation.py
 2. **Kalman Filter Demo**
--python kalman.py
+	-python kalman.py
 3. **EKF Localization**
--python ekf.py
+	-python ekf.py
 4. **EKF-SLAM**
--python ekf_slam.py
+	-python slam.py
 5. **MuJoCo Visualization**
--python run_slam_mujoco.py
+	-python run_slam_mujoco.py
 ---
  **Outputs**
 
@@ -201,13 +192,13 @@ Here’s a typical EKF-SLAM result:
 
 -**Evolution of:**
 
--State mean 
-𝜇
-μ
+	-State mean 
+	𝜇
 
 -Covariance 
 Σ
 Σ
+
 ---
  **Key Concepts Demonstrated**
 
