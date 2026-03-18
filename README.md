@@ -53,15 +53,11 @@ This forms the foundation for all later estimation algorithms.
 
 Implements a linear Kalman Filter on a double integrator system:
 - State:
-  
-  -position & velocity
+ - position & velocity
 - Demonstrates:
-  
-	-Prediction vs update
-
-	-Effect of process & measurement noise
-
-	-Convergence behavior
+ - Prediction vs update
+ - Effect of process & measurement noise
+ - Convergence behavior
   
   ---
 
@@ -101,12 +97,11 @@ Applies EKF to the nonlinear robot motion model:
 Runs the full SLAM pipeline:
 
 - Real-time simulation of:
-
-  -Robot motion
-
-  -LiDAR observations
-
-  -EKF updates
+  
+ - Robot motion
+   
+ - LiDAR observations
+- EKF updates
 
 - Tracks:
 
