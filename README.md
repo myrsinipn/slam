@@ -163,25 +163,30 @@ Here’s a typical EKF-SLAM result:
 ### Instalation
 Clone the repository and install dependencies:
 
-	git clone <your-repo-url>
+	git clone https://github.com/myrsinipn/slam.git
 	cd slam
 	pip install -r requirements.txt
 ---
 **How to Run**
 1. **Basic Simulation**
    
+```bash
 	python simulation.py
 2. **Kalman Filter Demo**
 
+```bash
 	python kalman.py
 3. **EKF Localization**
   
+```bash
 	python ekf.py
 4. **EKF-SLAM**
   
+```bash
 	python slam.py
 5. **MuJoCo Visualization**
 
+```bash
 	python run_slam_mujoco.py
 ---
  **Outputs**
