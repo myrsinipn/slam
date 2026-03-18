@@ -106,7 +106,7 @@ Runs the full SLAM pipeline:
 
 - Tracks:
 
-	-Estimated trajectory
+	- Estimated trajectory
 
 	- Ground truth
 
