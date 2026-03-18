@@ -51,7 +51,8 @@ This forms the foundation for all later estimation algorithms.
 
 Implements a linear Kalman Filter on a double integrator system:
 - **State:** position & velocity
-- **Demonstrates:** 
+- **Demonstrates:**
+  
 	-Prediction vs update
 
 	-Effect of process & measurement noise
@@ -74,7 +75,8 @@ Applies EKF to the nonlinear robot motion model:
 
 **Core implementation of EKF-based SLAM:**
 
--**State vector includes:**
+-State vector includes:
+
 	-Robot pose 
 (
 𝑥
@@ -86,9 +88,9 @@ Applies EKF to the nonlinear robot motion model:
 
 	-Landmark positions
 
--**Uses known landmark correspondences**
+-Uses known landmark correspondences
 
--**Sensor model: Simulated LiDAR (range & bearing)**
+-Sensor model: Simulated LiDAR (range & bearing)
 
 ---
 **slam.py — Full SLAM Simulation**
@@ -97,17 +99,17 @@ Runs the full SLAM pipeline:
 
 -Real-time simulation of:
 
-	-Robot motion
+ -Robot motion
 
-	-LiDAR observations
+ -LiDAR observations
 
-	-EKF updates
+ -EKF updates
 
 -Tracks:
 
-	-Estimated trajectory
+ -Estimated trajectory
 
-	-Ground truth
+ -Ground truth
 
 -Landmark map
 
@@ -132,10 +134,8 @@ Contains generated plots such as:
 
 -State mean 
 𝜇
-μ
 
 -Covariance 
-Σ
 Σ
 
 -Estimation error over time
@@ -172,12 +172,16 @@ Here’s a typical EKF-SLAM result:
 ---
 **How to Run**
 1. **Basic Simulation**
+   
 	-python simulation.py
 2. **Kalman Filter Demo**
+   
 	-python kalman.py
 3. **EKF Localization**
+   
 	-python ekf.py
 4. **EKF-SLAM**
+   
 	-python slam.py
 5. **MuJoCo Visualization**
 	-python run_slam_mujoco.py
@@ -192,12 +196,11 @@ Here’s a typical EKF-SLAM result:
 
 -**Evolution of:**
 
-	-State mean 
-	𝜇
+ -State mean 
+ 𝜇
 
--Covariance 
-Σ
-Σ
+ -Covariance 
+ Σ
 
 ---
  **Key Concepts Demonstrated**
