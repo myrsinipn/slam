@@ -170,7 +170,6 @@ Clone the repository and install dependencies:
 **How to Run**
 1. **Basic Simulation**
    
-```bash
 	python simulation.py
 2. **Kalman Filter Demo**
 
