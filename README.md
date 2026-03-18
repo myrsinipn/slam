@@ -163,11 +163,9 @@ Here’s a typical EKF-SLAM result:
 ### Instalation
 Clone the repository and install dependencies:
 
-```bash
-git clone <your-repo-url>
-cd slam
-pip install -r requirements.txt
-
+	git clone <your-repo-url>
+	cd slam
+	pip install -r requirements.txt
 ---
 **How to Run**
 1. **Basic Simulation**
