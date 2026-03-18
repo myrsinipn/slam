@@ -1,7 +1,7 @@
 # EKF-SLAM Simulation Project
 
 This repository implements a complete pipeline for Simultaneous Localization and Mapping (SLAM) using the Extended Kalman Filter (EKF).
---
+---
 ## Overview 
 The project is structured progressively, starting from:
 
@@ -12,6 +12,7 @@ The project is structured progressively, starting from:
 - **Real-time visualization using MuJoCo**
 
 The goal is to provide both intuitive understanding and practical implementation of probabilistic robotics algorithms.
+
 ---
 
 ## Project Structure
@@ -48,17 +49,20 @@ Angular velocity noise:
 )
 
 This forms the foundation for all later estimation algorithms.
+
 ---
 **kalman.py — Kalman Filter (Double Integrator)**
 
 Implements a linear Kalman Filter on a double integrator system:
 - **State:** position & velocity
--**Demonstrates:**
+- **Demonstrates:**
+- 
 	-Prediction vs update
 
 	-Effect of process & measurement noise
 
 	-Convergence behavior
+  
   ---
 
 **ekf.py — Extended Kalman Filter**
@@ -73,11 +77,11 @@ Applies EKF to the nonlinear robot motion model:
  ---  
  **slam.py — EKF-SLAM Core**
 
-Core implementation of EKF-based SLAM:
+**Core implementation of EKF-based SLAM:**
 
 -**State vector includes:**
 
--Robot pose 
+	-Robot pose 
 (
 𝑥
 ,
@@ -87,31 +91,33 @@ Core implementation of EKF-based SLAM:
 )
 (x,y,θ)
 
--Landmark positions
+	-Landmark positions
 
 -**Uses known landmark correspondences (no data association problem)**
 
 -**Sensor model: Simulated LiDAR (range & bearing)**
+
 ---
 **ekf_slam.py — Full SLAM Simulation**
 
 Runs the full SLAM pipeline:
 
--**Real-time simulation of:**
+-Real-time simulation of:
 
--Robot motion
+	-Robot motion
 
--LiDAR observations
+	-LiDAR observations
 
--EKF updates
+	-EKF updates
 
--**Tracks:**
+-Tracks:
 
--Estimated trajectory
+	-Estimated trajectory
 
--Ground truth
+	-Ground truth
 
 -Landmark map
+
 ---
 **run_slam_mujoco.py — MuJoCo Visualization**
 
@@ -122,10 +128,12 @@ Real-time visualization using MuJoCo:
 -Useful for debugging and demonstration
 
 -Integrates with simulation output
+
 ---
 **robotis_mujoco_menagerie/**
 
 Assets and models for MuJoCo simulation.
+
 ---
 **diagrams/**
 
@@ -140,6 +148,7 @@ Contains generated plots such as:
 Σ
 
 -Estimation error over time
+
 ---
 **SLAM Setup**
 
@@ -152,6 +161,7 @@ Contains generated plots such as:
 -Estimation Method: Extended Kalman Filter (EKF)
 
 -Execution: Real-time simulation
+
 ---
 **Example Output**
 
@@ -167,6 +177,7 @@ Here’s a typical EKF-SLAM result:
 
 🟡 LiDAR rays
 <img width="916" height="877" alt="image" src="https://github.com/user-attachments/assets/8f25297d-1ab8-4b26-b52a-88debab9a6d4" />
+
 ---
 **How to Run**
 1. **Basic Simulation**
@@ -213,4 +224,5 @@ Here’s a typical EKF-SLAM result:
 -Sensor modeling (LiDAR)
 
 -Real-time simulation
+
 ---
