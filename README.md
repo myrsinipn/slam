@@ -168,19 +168,19 @@ Clone the repository and install dependencies:
 	pip install -r requirements.txt
 ---
 **How to Run**
-- **Basic Simulation**
+**Basic Simulation**
 
-	 python simulation.py
-- **Kalman Filter Demo**
+	python simulation.py
+**Kalman Filter Demo**
 
 	python kalman.py
-- **EKF Localization**
-  
+**EKF Localization**
+
 	python ekf.py
-- **EKF-SLAM**
-  
+**EKF-SLAM**
+
 	python slam.py
-- **MuJoCo Visualization**
+**MuJoCo Visualization**
 
 	python run_slam_mujoco.py
 ---
