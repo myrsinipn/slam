@@ -53,11 +53,11 @@ This forms the foundation for all later estimation algorithms.
 
 Implements a linear Kalman Filter on a double integrator system:
 - State:
- - position & velocity
+ 	- position & velocity
 - Demonstrates:
- - Prediction vs update
- - Effect of process & measurement noise
- - Convergence behavior
+ 	- Prediction vs update
+ 	- Effect of process & measurement noise
+ 	- Convergence behavior
   
   ---
 
@@ -77,7 +77,7 @@ Applies EKF to the nonlinear robot motion model:
 
 - State vector includes:
 
- - Robot pose 
+ 	- Robot pose 
 (
 𝑥
 ,
@@ -86,7 +86,7 @@ Applies EKF to the nonlinear robot motion model:
 𝜃
 )
 
- - Landmark positions
+ 	- Landmark positions
  - Uses known landmark correspondences
  - Sensor model: Simulated LiDAR (range & bearing)
 
@@ -98,18 +98,19 @@ Runs the full SLAM pipeline:
 
 - Real-time simulation of:
   
- - Robot motion
+ 	- Robot motion
    
- - LiDAR observations
-- EKF updates
+ 	- LiDAR observations
+    
+	- EKF updates
 
 - Tracks:
 
-  -Estimated trajectory
+	-Estimated trajectory
 
-  -Ground truth
+	- Ground truth
 
- - Landmark map
+ 	- Landmark map
 
 ---
 ### run_slam_mujoco.py — MuJoCo Visualization
