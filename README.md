@@ -146,7 +146,9 @@ Here’s a typical EKF-SLAM result:
 
 ⭐ Landmarks
 
-🔵 Ground truth trajectory
+🔵 Noisy trajectory
+
+🟢 Ground truth trajectory
 
 🔴 Estimated trajectory
 
