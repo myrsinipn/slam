@@ -169,7 +169,8 @@ Clone the repository and install dependencies:
 ---
 **How to Run**
 - **Basic Simulation**
-		python simulation.py
+
+	python simulation.py
 - **Kalman Filter Demo**
 
 	python kalman.py
