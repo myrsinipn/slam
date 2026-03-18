@@ -16,7 +16,7 @@ This repository implements a complete pipeline for Simultaneous Localization and
 ---
 
 ## Project Structure
- **simulation.py — Noisy Robot Motion Model**
+ ### simulation.py — Noisy Robot Motion Model
 
 Implements a unicycle (velocity) motion model with Gaussian noise:
 
@@ -49,7 +49,7 @@ Implements a unicycle (velocity) motion model with Gaussian noise:
 This forms the foundation for all later estimation algorithms.
 
 ---
-**kalman.py — Kalman Filter (Double Integrator)**
+### kalman.py — Kalman Filter (Double Integrator)
 
 Implements a linear Kalman Filter on a double integrator system:
 - State:
@@ -65,7 +65,7 @@ Implements a linear Kalman Filter on a double integrator system:
   
   ---
 
-**ekf.py — Extended Kalman Filter**
+### ekf.py — Extended Kalman Filter
 
 Applies EKF to the nonlinear robot motion model:
 
@@ -75,7 +75,7 @@ Applies EKF to the nonlinear robot motion model:
 
 - Estimates robot pose under noise
  ---  
- **ekf_slam.py — EKF-SLAM Core**
+ ### ekf_slam.py — EKF-SLAM Core
 
 **Core implementation of EKF-based SLAM:**
 
@@ -96,7 +96,7 @@ Applies EKF to the nonlinear robot motion model:
 
 
 ---
-**slam.py — Full SLAM Simulation**
+### slam.py — Full SLAM Simulation
 
 Runs the full SLAM pipeline:
 
@@ -117,7 +117,7 @@ Runs the full SLAM pipeline:
  - Landmark map
 
 ---
-**run_slam_mujoco.py — MuJoCo Visualization**
+### run_slam_mujoco.py — MuJoCo Visualization
 
 Real-time visualization using MuJoCo:
 
@@ -126,22 +126,9 @@ Real-time visualization using MuJoCo:
 - Integrates with simulation output
 
 ---
-**robotis_mujoco_menagerie/**
+### robotis_mujoco_menagerie/
 
 Assets and models for MuJoCo simulation.
-
----
-**diagrams/**
-
-Contains generated plots such as:
-
-- State mean 
-𝜇
-
-- Covariance 
-Σ
-
-- Estimation error over time
 
 ---
 **SLAM Setup**
@@ -171,6 +158,15 @@ Here’s a typical EKF-SLAM result:
 
 🟡 LiDAR rays
 <img width="916" height="877" alt="image" src="https://github.com/user-attachments/assets/8f25297d-1ab8-4b26-b52a-88debab9a6d4" />
+
+---
+### Instalation
+Clone the repository and install dependencies:
+
+```bash
+git clone <your-repo-url>
+cd slam
+pip install -r requirements.txt
 
 ---
 **How to Run**
