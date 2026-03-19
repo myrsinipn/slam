@@ -1,12 +1,27 @@
-venv1/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.DS_Store
+# Virtual environments
 venv/
+venv1/
+.env/
+
+# Python cache
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# IDEs / Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Jupyter notebooks (optional)
+.ipynb_checkpoints/
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
