@@ -12,6 +12,7 @@ This repository implements a complete pipeline for Simultaneous Localization and
 - **Real-time visualization using MuJoCo**
 
 **The goal is to provide both intuitive understanding and practical implementation of probabilistic robotics algorithms.**
+<img width="1018" height="456" alt="image" src="https://github.com/user-attachments/assets/14cedb67-f420-4278-9bae-bd116bd526f2" />
 
 ---
 
@@ -155,7 +156,8 @@ Here’s a typical EKF-SLAM result:
 🟠 Robot position
 
 🟡 LiDAR rays
-<img width="916" height="877" alt="image" src="https://github.com/user-attachments/assets/8f25297d-1ab8-4b26-b52a-88debab9a6d4" />
+<img width="939" height="871" alt="image" src="https://github.com/user-attachments/assets/a6b38631-f2d4-4aaf-9b94-530c5c7e857c" />
+
 
 ---
 ### Instalation
