@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-from ekf_slam import EKFSLAM, wrap_angle,spiral_schedule
+from ekf_slam_core import EKFSLAM, wrap_angle,spiral_schedule
 
 class Robot:
 
