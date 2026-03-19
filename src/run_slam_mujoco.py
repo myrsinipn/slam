@@ -4,9 +4,9 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 import os
-from ekf_slam import EKFSLAM, wrap_angle, spiral_schedule
+from ekf_slam_core import EKFSLAM, wrap_angle, spiral_schedule
 
-MODEL_PATH = "C:\\Users\\myrsi\\slam\\robotis_mujoco_menagerie\\robotis_tb3\\scene_turtlebot3_waffle_pi.xml"
+MODEL_PATH = "path/to/your/model.xml"
 def random_landmarks(n=8, x_range=(-5, 5), y_range=(0, 10), seed=None):
     rng = np.random.default_rng(seed)
     xs  = rng.uniform(x_range[0], x_range[1], n)
@@ -32,7 +32,7 @@ xml_string = xml_string.replace(
     "</worldbody>",
     landmark_xml + "\n</worldbody>"
 )
-base_dir = "C:\\Users\\myrsi\\slam\\robotis_mujoco_menagerie\\robotis_tb3"
+base_dir = "path\\to\\slam\\robotis_mujoco_menagerie\\robotis_tb3"
 
 assets = {}
 
